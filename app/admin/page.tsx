@@ -81,11 +81,11 @@ export default async function AdminDashboard() {
       .select("id, title, views")
       .order("views", { ascending: false })
       .limit(10),
-    // Correct analytics view
+    // Correct analytics view - Last 30 days
     supabase
       .from("analytics_daily_stats")
       .select("*")
-      .gte("date", new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
+      .gte("date", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
       .order("date", { ascending: true }),
     // New Analytics Queries
     supabase.from("analytics_top_pages").select("*").limit(10),

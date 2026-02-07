@@ -11,6 +11,7 @@ import "./globals.css"
 import { SessionManager } from "@/components/session-manager"
 import { InAppBrowserBlocker } from "@/components/in-app-browser-blocker"
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider"
+import { AnalyticsTracker } from "@/components/analytics-tracker"
 import { JsonLd } from "@/components/json-ld"
 import { generateWebsiteSchema, generatePersonSchema } from "@/lib/schema-generator"
 
@@ -218,6 +219,7 @@ export default async function RootLayout({
           <AuthProvider>
             <InAppBrowserBlocker />
             <SessionManager />
+            <AnalyticsTracker />
             <JsonLd schema={[generateWebsiteSchema(), generatePersonSchema()]} />
             <AnalyticsProvider />
             {children}
