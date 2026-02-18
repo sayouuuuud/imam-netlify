@@ -1,3 +1,4 @@
+import "./globals.css"
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Amiri, Cairo } from "next/font/google"
@@ -7,7 +8,6 @@ import Script from 'next/script'
 import { createPublicClient } from "@/lib/supabase/public"
 import { unstable_cache } from "next/cache"
 import { withTimeout } from "@/lib/utils/with-timeout"
-import "./globals.css"
 import { SessionManager } from "@/components/session-manager"
 import { InAppBrowserBlocker } from "@/components/in-app-browser-blocker"
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider"
@@ -79,8 +79,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteKeywords =
     settings.site_keywords ||
     "الشيخ السيد مراد,دروس إسلامية,خطب الجمعة,علم شرعي,فقه إسلامي,سيرة نبوية,مقالات دينية,كتب إسلامية"
-  // Hardcode the specific domain to avoid Vercel preview URL issues or localhost fallback in production
-  const baseUrl = new URL("https://elsayed-mourad.vercel.app")
+  // Use the production domain
+  const baseUrl = new URL("https://elsayed-mourad.online")
 
   return {
     title: {
@@ -99,7 +99,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteTitle,
       description: siteDescription,
       images: [{
-        url: settings.og_image || "/2121.jpeg",
+        url: settings.og_image || "/og-default.jpg",
         width: 1200,
         height: 630,
         alt: siteTitle,
@@ -109,7 +109,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: siteTitle,
       description: siteDescription,
-      images: [settings.og_image || "/2121.jpeg"],
+      images: [settings.og_image || "/og-default.jpg"],
     },
     robots: {
       index: true,

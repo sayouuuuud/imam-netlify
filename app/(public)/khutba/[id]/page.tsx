@@ -9,6 +9,8 @@ import { NewsletterCard } from "@/components/newsletter-card"
 import { ArticleInteractions } from "@/components/articles/article-interactions"
 import { LessonInteractions } from "@/components/lessons/lesson-interactions"
 import { stripHtml } from "@/lib/utils/strip-html"
+import { getSermonOgImage } from "@/lib/utils/og-images"
+
 import { Metadata } from "next"
 import { JsonLd } from "@/components/json-ld"
 import { generateArticleSchema, generateAudioSchema, generateBreadcrumbSchema, formatDurationToISO } from "@/lib/schema-generator"
@@ -24,9 +26,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!sermon) return { title: "الخطبة غير موجودة" }
 
+    const ogImage = getSermonOgImage(sermon)
+
     return {
         title: `${sermon.title} | الشيخ السيد مراد سلامة`,
         description: sermon.description ? sermon.description.replace(/<[^>]*>/g, '').slice(0, 160) : undefined,
+        openGraph: {
+            title: sermon.title,
+            description: sermon.description ? sermon.description.replace(/<[^>]*>/g, '').slice(0, 160) : undefined,
+            images: [ogImage],
+            type: "article",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: sermon.title,
+            description: sermon.description ? sermon.description.replace(/<[^>]*>/g, '').slice(0, 160) : undefined,
+            images: [ogImage.url],
+        },
     }
 }
 
@@ -129,7 +145,7 @@ export default async function KhutbaDetailPage({ params }: PageProps) {
         title: sermon.title,
         description: sermon.description ? stripHtml(sermon.description) : undefined,
         uploadDate: sermon.created_at,
-        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://alsayed-mourad.com${audioUrl}`,
+        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://elsayed-mourad.online${audioUrl}`,
         duration: formatDurationToISO(sermon.duration),
     }) : null
 

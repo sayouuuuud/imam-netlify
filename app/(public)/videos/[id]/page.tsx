@@ -137,8 +137,8 @@ export default async function VideoDetailPage({ params }: PageProps) {
     title: video.title,
     description: video.description ? stripHtml(video.description) : video.title,
     uploadDate: video.created_at,
-    thumbnailUrl: thumbnailUrl.startsWith('http') ? thumbnailUrl : `https://alsayed-mourad.com${thumbnailUrl}`,
-    contentUrl: video.source !== "youtube" && video.url ? (video.url.startsWith('http') ? video.url : `https://alsayed-mourad.com${video.url}`) : undefined,
+    thumbnailUrl: thumbnailUrl.startsWith('http') ? thumbnailUrl : `https://elsayed-mourad.online${thumbnailUrl}`,
+    contentUrl: video.source !== "youtube" && video.url ? (video.url.startsWith('http') ? video.url : `https://elsayed-mourad.online${video.url}`) : undefined,
     embedUrl: video.source === "youtube" && videoId ? `https://www.youtube.com/embed/${videoId}` : undefined,
     duration: formatDurationToISO(video.duration),
   })

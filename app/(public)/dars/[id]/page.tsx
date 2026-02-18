@@ -167,15 +167,15 @@ export default async function DarsDetailPage({ params }: PageProps) {
         title: lesson.title,
         description: lesson.description ? stripHtml(lesson.description) : lesson.title,
         uploadDate: lesson.created_at,
-        thumbnailUrl: thumbnailPath ? (thumbnailPath.startsWith('http') ? thumbnailPath : `https://alsayed-mourad.com${thumbnailPath}`) : 'https://alsayed-mourad.com/video-thumbnail.png',
-        contentUrl: !lesson.youtube_url && audioUrl ? (audioUrl.startsWith('http') ? audioUrl : `https://alsayed-mourad.com${audioUrl}`) : undefined,
+        thumbnailUrl: thumbnailPath ? (thumbnailPath.startsWith('http') ? thumbnailPath : `https://elsayed-mourad.online${thumbnailPath}`) : 'https://elsayed-mourad.online/video-thumbnail.png',
+        contentUrl: !lesson.youtube_url && audioUrl ? (audioUrl.startsWith('http') ? audioUrl : `https://elsayed-mourad.online${audioUrl}`) : undefined,
         embedUrl: lesson.youtube_url ? `https://www.youtube.com/embed/${lesson.youtube_url.split("v=")[1]?.split("&")[0] || lesson.youtube_url.split("/").pop()}` : undefined,
         duration: formatDurationToISO(lesson.duration),
     }) : (audioUrl ? generateAudioSchema({
         title: lesson.title,
         description: lesson.description ? stripHtml(lesson.description) : undefined,
         uploadDate: lesson.created_at,
-        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://alsayed-mourad.com${audioUrl}`,
+        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://elsayed-mourad.online${audioUrl}`,
         duration: formatDurationToISO(lesson.duration),
     }) : null);
 

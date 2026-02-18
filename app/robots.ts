@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const baseUrl = 'https://alsayed-mourad.com' // Should be dynamic based on environment
+const baseUrl = 'https://elsayed-mourad.online' // Should be dynamic based on environment
 
 export default function robots(): MetadataRoute.Robots {
     return {

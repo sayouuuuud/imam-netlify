@@ -318,6 +318,8 @@ div .switch {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: "Cairo", sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   /* ========== SHADOW CLASSES USING CSS VARIABLES ========== */

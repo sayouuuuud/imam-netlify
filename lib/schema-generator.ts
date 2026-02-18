@@ -5,7 +5,7 @@ export type SchemaType = {
     [key: string]: any;
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alsayed-mourad.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://elsayed-mourad.online';
 const AUTHOR_NAME = 'الشيخ السيد مراد';
 const AUTHOR_URL = SITE_URL;
 
