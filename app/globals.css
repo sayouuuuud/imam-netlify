@@ -1,161 +1,71 @@
-@import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* ========== LIGHT MODE COLORS - EXPLICIT CSS RULES ========== */
-:root,
-.light {
-  /* Fonts */
-  --font-sans: var(--font-cairo), "Cairo", sans-serif;
-  --font-serif: var(--font-amiri), "Amiri", serif;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-  /* ========== BRAND COLORS (Consistent across modes) ========== */
-  --color-primary: #035d44;
-  --color-primary-hover: #047857;
-  --color-primary-light: #059669;
-  --color-primary-foreground: #ffffff;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-  --color-secondary: #d4af37;
-  --color-secondary-hover: #b58842;
-  --color-secondary-light: #e5c85c;
-  --color-secondary-foreground: #1f2937;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-  /* ========== LIGHT MODE COLORS ========== */
-  /* Backgrounds - High contrast for readability */
-  --color-background: #f8fafc;
-  --color-background-alt: #f1f5f9;
-  --color-surface: #ffffff;
-  --color-card: #ffffff;
-  --color-popover: #ffffff;
-  --color-sidebar: #f8fafc;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-  /* Text - WCAG 2.1 AA compliant contrast ratios */
-  --color-foreground: #1e293b;
-  /* 7.5:1 contrast on white */
-  --color-text-main: #1e293b;
-  --color-text-muted: #64748b;
-  /* 4.8:1 contrast on white */
-  --color-text-subtext: #64748b;
-  --color-card-foreground: #1e293b;
-  --color-popover-foreground: #1e293b;
-  --color-sidebar-foreground: #1e293b;
-  --color-muted-foreground: #64748b;
-  --color-sidebar-accent-foreground: #1e293b;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-  /* Borders - Visible but not harsh */
-  --color-border: #cbd5e1;
-  --color-border-light: #f1f5f9;
-  --color-input: #e2e8f0;
-  --color-sidebar-border: #e2e8f0;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-  /* Interactive Elements */
-  --color-accent: #f1f5f9;
-  --color-accent-foreground: #1e293b;
-  --color-muted: #f8fafc;
-  --color-sidebar-accent: #f1f5f9;
-  --color-ring: #035d44;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-  /* Status Colors */
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
-  --color-islamic-green: #16a085;
-  --color-islamic-green-light: #e8f5f0;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-  /* ========== SHADOW SYSTEM - LIGHT MODE ========== */
-  --color-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --color-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --color-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --color-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --color-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
-  /* ========== RADIUS SYSTEM ========== */
-  --radius: 0.5rem;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+    --radius: 0.5rem;
+  }
 
-  /* ========== SIDEBAR VARIABLES (Shadcn/Legacy) ========== */
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-@theme inline {
-  /* Maps to variables defined above for Tailwind v4 compatibility */
-  --color-background: var(--color-background);
-  --color-background-alt: var(--color-background-alt);
-  --color-surface: var(--color-surface);
-  --color-card: var(--color-card);
-  --color-popover: var(--color-popover);
-  --color-sidebar: var(--color-sidebar);
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-  --color-foreground: var(--color-foreground);
-  --color-text-main: var(--color-text-main);
-  --color-text-muted: var(--color-text-muted);
-  --color-text-subtext: var(--color-text-subtext);
-  --color-card-foreground: var(--color-card-foreground);
-  --color-popover-foreground: var(--color-popover-foreground);
-  --color-sidebar-foreground: var(--color-sidebar-foreground);
-  --color-muted-foreground: var(--color-muted-foreground);
-  --color-sidebar-accent-foreground: var(--color-sidebar-accent-foreground);
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-  --color-border: var(--color-border);
-  --color-border-light: var(--color-border-light);
-  --color-input: var(--color-input);
-  --color-sidebar-border: var(--color-sidebar-border);
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-  --color-accent: var(--color-accent);
-  --color-accent-foreground: var(--color-accent-foreground);
-  --color-muted: var(--color-muted);
-  --color-sidebar-accent: var(--color-sidebar-accent);
-  --color-ring: var(--color-ring);
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-  /* Brand colors */
-  --color-primary: var(--color-primary);
-  --color-primary-hover: var(--color-primary-hover);
-  --color-primary-light: var(--color-primary-light);
-  --color-primary-foreground: var(--color-primary-foreground);
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-  --color-secondary: var(--color-secondary);
-  --color-secondary-hover: var(--color-secondary-hover);
-  --color-secondary-light: var(--color-secondary-light);
-  --color-secondary-foreground: var(--color-secondary-foreground);
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-  /* Status colors */
-  --color-destructive: var(--color-destructive);
-  --color-destructive-foreground: var(--color-destructive-foreground);
-  --color-islamic-green: var(--color-islamic-green);
-  --color-islamic-green-light: var(--color-islamic-green-light);
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-  /* Fonts */
-  --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif);
-
-  /* Shadows */
-  --color-shadow-sm: var(--color-shadow-sm);
-  --color-shadow: var(--color-shadow);
-  --color-shadow-md: var(--color-shadow-md);
-  --color-shadow-lg: var(--color-shadow-lg);
-  --color-shadow-xl: var(--color-shadow-xl);
-
-  /* Radius */
-  --radius: var(--radius);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-xl: var(--radius-xl);
-  --radius-2xl: var(--radius-2xl);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
 /* ========== DARK MODE COLORS - COMPLETELY INDEPENDENT ========== */
