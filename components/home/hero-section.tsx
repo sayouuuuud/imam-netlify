@@ -141,13 +141,6 @@ export async function HeroSection({ data }: HeroSectionProps) {
       )}
 
       <div className={heroData.notice_active && heroData.notice_text ? "pt-12" : ""}>
-        <div
-          className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none dark:opacity-[0.08]"
-          style={{
-            backgroundImage: "radial-gradient(var(--primary) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
