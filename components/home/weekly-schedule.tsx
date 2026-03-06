@@ -48,7 +48,7 @@ export function WeeklySchedule({ schedule }: WeeklyScheduleProps) {
           <span className="bg-primary/10 text-primary p-2.5 rounded-xl border border-primary/20">
             <span className="material-icons-outlined text-xl">calendar_today</span>
           </span>
-          <h3 className="text-2xl font-bold font-serif text-foreground">جدول الدروس الأسبوعية</h3>
+          <h3 className="text-2xl font-bold font-serif text-foreground" >جدول الدروس الأسبوعية</h3>
         </div>
         <span className="text-[10px] font-medium uppercase tracking-wider text-text-muted bg-muted/50 border border-border/50 px-3 py-1 rounded-full flex items-center gap-1.5">
           <span className="material-icons-outlined text-[12px] text-secondary">schedule</span>
