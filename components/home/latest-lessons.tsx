@@ -50,20 +50,20 @@ export function LatestContent({ content }: LatestContentProps) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <span className="bg-emerald-100 text-emerald-700 p-2.5 rounded-xl shadow-sm">
+          <span className="bg-secondary/10 text-secondary p-2.5 rounded-xl border border-secondary/20">
             <FileText className="h-5 w-5" />
           </span>
           <h3 className="text-2xl font-bold font-serif text-foreground">أحدث المحتويات</h3>
         </div>
-        <Link href="/articles" className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
-          عرض المكتبة
-          <ArrowLeft className="h-4 w-4" />
+        <Link href="/articles" className="text-xs font-bold text-primary hover:text-primary/70 flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 transition-all">
+          المكتبة الكاملة
+          <ArrowLeft className="h-3.5 w-3.5" />
         </Link>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {content.length === 0 ? (
-          <div className="text-center py-12 bg-card dark:bg-card/80 rounded-2xl border-2 border-border dark:border-border/50">
-            <FileText className="h-12 w-12 mx-auto text-text-muted mb-4" />
+          <div className="text-center py-12 bg-card/50 dark:bg-card/40 backdrop-blur-sm rounded-2xl border border-border/60">
+            <FileText className="h-12 w-12 mx-auto text-text-muted/30 mb-4" />
             <p className="text-text-muted">لا توجد محتويات حالياً</p>
           </div>
         ) : (
@@ -88,17 +88,17 @@ export function LatestContent({ content }: LatestContentProps) {
             const getItemIcon = () => {
               switch (item.content_type) {
                 case "article":
-                  return <FileText className="h-6 w-6 text-primary" />
+                  return <FileText className="h-5 w-5 text-primary" />
                 case "sermon":
-                  return <Mic className="h-6 w-6 text-secondary" />
+                  return <Mic className="h-5 w-5 text-secondary" />
                 case "lesson":
-                  return <Play className="h-6 w-6 text-primary" />
+                  return <Play className="h-5 w-5 text-primary" />
                 case "book":
-                  return <BookOpen className="h-6 w-6 text-emerald-600" />
+                  return <BookOpen className="h-5 w-5 text-emerald-600" />
                 case "video":
-                  return <Video className="h-6 w-6 text-red-500" />
+                  return <Video className="h-5 w-5 text-red-500" />
                 default:
-                  return <FileText className="h-6 w-6 text-primary" />
+                  return <FileText className="h-5 w-5 text-primary" />
               }
             }
 
@@ -122,17 +122,17 @@ export function LatestContent({ content }: LatestContentProps) {
             const getItemTypeColor = () => {
               switch (item.content_type) {
                 case "article":
-                  return "bg-primary/10 dark:bg-primary/20 text-primary"
+                  return "bg-primary/10 text-primary border-primary/20"
                 case "sermon":
-                  return "bg-secondary/10 dark:bg-secondary/20 text-secondary"
+                  return "bg-secondary/10 text-secondary border-secondary/20"
                 case "lesson":
-                  return "bg-primary/10 dark:bg-primary/20 text-primary"
+                  return "bg-primary/10 text-primary border-primary/20"
                 case "book":
-                  return "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600"
+                  return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                 case "video":
-                  return "bg-red-500/10 dark:bg-red-500/20 text-red-500"
+                  return "bg-red-500/10 text-red-500 border-red-500/20"
                 default:
-                  return "bg-primary/10 dark:bg-primary/20 text-primary"
+                  return "bg-primary/10 text-primary border-primary/20"
               }
             }
 
@@ -146,48 +146,47 @@ export function LatestContent({ content }: LatestContentProps) {
               <Link
                 key={`${item.content_type}-${item.id}`}
                 href={getItemUrl()}
-                className="block bg-card dark:bg-card/80 hover:bg-muted dark:hover:bg-white/5 border-2 border-border dark:border-border/50 rounded-xl p-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group"
+                className="group block bg-card/40 dark:bg-card/30 backdrop-blur-sm border border-border/60 dark:border-border/30 rounded-xl p-4 transition-all duration-300 hover:border-primary/40 hover:bg-muted/30 dark:hover:bg-white/5 shadow hover:shadow-lg"
               >
                 <div className="flex gap-4">
                   <div
-                    className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center ${showThumbnail ? 'bg-muted' : getItemTypeColor()}`}
+                    className={`flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center border ${showThumbnail ? 'border-border/40' : getItemTypeColor()}`}
                   >
                     {showThumbnail ? (
                       <img
                         src={thumbnailUrl!}
                         alt={item.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      getItemIcon()
+                      <div className="transition-transform duration-300 group-hover:scale-110">
+                        {getItemIcon()}
+                      </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getItemTypeColor()}`}>
-                        {getItemTypeLabel()}
-                      </span>
-                      <span className="text-xs text-text-muted">
-                        {formatDistanceToNow(new Date(item.created_at), {
-                          addSuffix: true,
-                          locale: ar,
-                        })}
-                      </span>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${getItemTypeColor()}`}>
+                          {getItemTypeLabel()}
+                        </span>
+                        <span className="text-[10px] font-medium text-text-muted">
+                          {formatDistanceToNow(new Date(item.created_at), {
+                            addSuffix: true,
+                            locale: ar,
+                          })}
+                        </span>
+                      </div>
                     </div>
-                    <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                    <h4 className="font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight mb-1">
                       {item.title}
                     </h4>
 
-                    {/* Special Layout for Lessons: Author and 12h Time */}
+                    {/* Special Layout for Lessons */}
                     {item.content_type === "lesson" && (
-                      <div className="flex items-center justify-between mt-1 text-xs text-text-muted">
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium text-foreground">{item.author || "السيد مراد سلامة"}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {/* Time removed as requested */}
-                        </div>
+                      <div className="flex items-center justify-between text-[11px] text-text-muted">
+                        <p className="font-medium opacity-80">{item.author || "السيد مراد سلامة"}</p>
                       </div>
                     )}
 
@@ -195,14 +194,14 @@ export function LatestContent({ content }: LatestContentProps) {
                     {item.content_type !== "lesson" && (
                       <>
                         {(item.content_type === "book" || item.content_type === "article") && item.author && (
-                          <p className="text-sm text-text-muted font-medium mt-0.5">{item.author}</p>
+                          <p className="text-[11px] text-text-muted font-medium opacity-80">{item.author}</p>
                         )}
                         {cleanDescription && item.content_type !== "book" && (
-                          <p className="text-sm text-text-muted line-clamp-1 mt-1">{cleanDescription}</p>
+                          <p className="text-xs text-text-muted line-clamp-1 opacity-70 mt-1">{cleanDescription}</p>
                         )}
                         {(item.read_time || item.duration) && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-text-muted">
-                            <Clock className="h-3 w-3 text-secondary" />
+                          <div className="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-text-muted/60 uppercase">
+                            <Clock className="h-3 w-3" />
                             <span>{item.read_time ? `${item.read_time} دقيقة قراءة` : item.duration}</span>
                           </div>
                         )}
