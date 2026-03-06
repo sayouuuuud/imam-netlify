@@ -132,7 +132,7 @@ export default async function KhutbaDetailPage({ params }: PageProps) {
     const audioUrl = getAudioUrl(sermon)
     const thumbnailPath = getThumbnailPath(sermon)
 
-    const articleSchema = generateArticleSchema({
+    const articleSchema = await generateArticleSchema({
         title: sermon.title,
         description: sermon.description ? stripHtml(sermon.description) : undefined,
         url: `/khutba/${sermon.id}`,
@@ -141,7 +141,7 @@ export default async function KhutbaDetailPage({ params }: PageProps) {
         dateModified: sermon.created_at, // Assuming no update time available
     })
 
-    const audioSchema = audioUrl ? generateAudioSchema({
+    const audioSchema = audioUrl ? await generateAudioSchema({
         title: sermon.title,
         description: sermon.description ? stripHtml(sermon.description) : undefined,
         uploadDate: sermon.created_at,
@@ -149,7 +149,7 @@ export default async function KhutbaDetailPage({ params }: PageProps) {
         duration: formatDurationToISO(sermon.duration),
     }) : null
 
-    const breadcrumbSchema = generateBreadcrumbSchema([
+    const breadcrumbSchema = await generateBreadcrumbSchema([
         { name: 'الرئيسية', item: '/' },
         { name: 'الخطب المنبرية', item: '/khutba' },
         { name: sermon.title, item: `/khutba/${sermon.id}` },

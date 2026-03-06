@@ -5,6 +5,8 @@ import { Search, ChevronRight, ChevronLeft } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ImageWithFallback } from "@/components/ui/image-with-fallback"
+import { JsonLd } from "@/components/json-ld"
+import { generateItemListSchema } from "@/lib/schema-generator"
 
 export const metadata: Metadata = {
   title: "المقالات والبحوث - الشيخ السيد مراد",
@@ -82,6 +84,17 @@ export default async function ArticlesPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd schema={await generateItemListSchema(
+        "المقالات والبحوث - الشيخ السيد مراد",
+        "/articles",
+        "مجموعة من المقالات والبحوث العلمية في العلوم الشرعية والقضايا المعاصرة",
+        (articles || []).map(a => ({
+          id: a.id,
+          title: a.title,
+          url: `/articles/${a.id}`,
+          datePublished: a.created_at,
+        }))
+      )} />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
         <div className="container mx-auto px-4">

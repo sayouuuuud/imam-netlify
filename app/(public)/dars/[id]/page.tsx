@@ -152,7 +152,7 @@ export default async function DarsDetailPage({ params }: PageProps) {
     const audioUrl = getAudioUrl(lesson)
     const thumbnailPath = getThumbnailPath(lesson)
 
-    const articleSchema = generateArticleSchema({
+    const articleSchema = await generateArticleSchema({
         title: lesson.title,
         description: lesson.description ? stripHtml(lesson.description) : undefined,
         url: `/dars/${lesson.id}`,
@@ -163,7 +163,7 @@ export default async function DarsDetailPage({ params }: PageProps) {
 
     const isVideo = lesson.youtube_url || (lesson.type === 'video' && audioUrl);
 
-    const mediaSchema = isVideo ? generateVideoSchema({
+    const mediaSchema = isVideo ? await generateVideoSchema({
         title: lesson.title,
         description: lesson.description ? stripHtml(lesson.description) : lesson.title,
         uploadDate: lesson.created_at,
@@ -171,7 +171,7 @@ export default async function DarsDetailPage({ params }: PageProps) {
         contentUrl: !lesson.youtube_url && audioUrl ? (audioUrl.startsWith('http') ? audioUrl : `https://elsayed-mourad.online${audioUrl}`) : undefined,
         embedUrl: lesson.youtube_url ? `https://www.youtube.com/embed/${lesson.youtube_url.split("v=")[1]?.split("&")[0] || lesson.youtube_url.split("/").pop()}` : undefined,
         duration: formatDurationToISO(lesson.duration),
-    }) : (audioUrl ? generateAudioSchema({
+    }) : (audioUrl ? await generateAudioSchema({
         title: lesson.title,
         description: lesson.description ? stripHtml(lesson.description) : undefined,
         uploadDate: lesson.created_at,
@@ -179,7 +179,7 @@ export default async function DarsDetailPage({ params }: PageProps) {
         duration: formatDurationToISO(lesson.duration),
     }) : null);
 
-    const breadcrumbSchema = generateBreadcrumbSchema([
+    const breadcrumbSchema = await generateBreadcrumbSchema([
         { name: 'الرئيسية', item: '/' },
         { name: 'الدروس العلمية', item: '/dars' },
         { name: lesson.title, item: `/dars/${lesson.id}` },

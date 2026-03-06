@@ -8,8 +8,33 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth-context"
 import { createClient } from "@/lib/supabase/client"
 import { UiverseToggle } from "@/components/ui/uiverse-toggle"
-import { Save, Search, Globe, RefreshCw, Plus, Pencil, Trash2, X, FileText, Trash, Share2, BarChart3, Code, LinkIcon, Shield, Eye } from "lucide-react"
+import { Save, Search, Globe, RefreshCw, Plus, Pencil, Trash2, X, FileText, Trash, Share2, BarChart3, Code, LinkIcon, Shield, Eye, Activity, ArrowRightLeft, Radar, CheckCircle2, XCircle, AlertTriangle, ExternalLink } from "lucide-react"
 import { FileUpload } from "@/components/admin/file-upload"
+
+interface Redirect {
+  id: string
+  source_path: string
+  destination_path: string
+  redirect_type: number
+  is_active: boolean
+  hits_count: number
+  created_at: string
+}
+
+interface ContentAuditItem {
+  id: string
+  title: string
+  type: string
+  typeName: string
+  url: string
+  issues: string[]
+  score: number
+  hasDescription: boolean
+  hasImage: boolean
+  hasTags: boolean
+  titleLength: number
+  descriptionLength: number
+}
 
 interface SEOSettings {
   meta_title: string
@@ -61,7 +86,25 @@ export default function SEOManagementPage() {
   const { user } = useAuth()
   const isVisitor = user?.email === 'visitor@gmail.com'
   const [message, setMessage] = useState("")
-  const [activeTab, setActiveTab] = useState<"general" | "social" | "verification" | "pages" | "analytics" | "advanced" | "cache">("general")
+  const [activeTab, setActiveTab] = useState<"general" | "social" | "verification" | "pages" | "analytics" | "advanced" | "cache" | "audit" | "redirects" | "indexing">("general")
+
+  // Audit state
+  const [auditResults, setAuditResults] = useState<ContentAuditItem[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
+  const [auditFilter, setAuditFilter] = useState<string>("all")
+
+  // Redirects state
+  const [redirects, setRedirects] = useState<Redirect[]>([])
+  const [redirectsLoading, setRedirectsLoading] = useState(false)
+  const [isAddingRedirect, setIsAddingRedirect] = useState(false)
+  const [editingRedirectId, setEditingRedirectId] = useState<string | null>(null)
+  const [redirectForm, setRedirectForm] = useState({ source_path: "", destination_path: "", redirect_type: 301, is_active: true })
+
+  // Indexing state
+  const [indexingUrls, setIndexingUrls] = useState<{ url: string; type: string }[]>([])
+  const [indexingLoading, setIndexingLoading] = useState(false)
+  const [pingResults, setPingResults] = useState<{ url: string; google?: string; bing?: string }[]>([])
+  const [selectedUrls, setSelectedUrls] = useState<Set<string>>(new Set())
 
   // Page-specific SEO
   const [pageSEOList, setPageSEOList] = useState<PageSEO[]>([])
@@ -253,6 +296,222 @@ export default function SEOManagementPage() {
     }
   }
 
+  // === AUDIT FUNCTIONS ===
+  async function runAudit() {
+    setAuditLoading(true)
+    setAuditResults([])
+    try {
+      const [sermonsRes, lessonsRes, articlesRes, booksRes, mediaRes] = await Promise.all([
+        supabase.from("sermons").select("id, title, description, thumbnail_path, tags, content").eq("publish_status", "published"),
+        supabase.from("lessons").select("id, title, description, thumbnail_path, tags, content").eq("publish_status", "published"),
+        supabase.from("articles").select("id, title, content, thumbnail, featured_image, tags, excerpt").eq("publish_status", "published"),
+        supabase.from("books").select("id, title, description, cover_image, tags").eq("publish_status", "published"),
+        supabase.from("media").select("id, title, description, thumbnail, tags").eq("publish_status", "published"),
+      ])
+
+      const results: ContentAuditItem[] = []
+
+      const analyze = (item: any, type: string, typeName: string, urlPrefix: string, descField: string, imgField: string | string[]) => {
+        const issues: string[] = []
+        const title = item.title || ""
+        const desc = item[descField] || item.description || item.excerpt || ""
+        const cleanDesc = desc.replace(/<[^>]*>/g, "")
+        const content = item.content || ""
+        const cleanContent = content.replace(/<[^>]*>/g, "")
+        const wordCount = cleanContent.split(/\s+/).filter(Boolean).length
+
+        // Check title
+        if (!title) issues.push("لا يوجد عنوان")
+        else if (title.length < 10) issues.push("العنوان قصير جداً (أقل من 10 أحرف)")
+        else if (title.length > 70) issues.push("العنوان طويل جداً (أكثر من 70 حرف)")
+
+        // Check description
+        const hasDescription = cleanDesc.length > 0
+        if (!hasDescription) issues.push("لا يوجد وصف")
+        else if (cleanDesc.length < 50) issues.push("الوصف قصير (أقل من 50 حرف)")
+        else if (cleanDesc.length > 200) issues.push("الوصف طويل (أكثر من 200 حرف)")
+
+        // Check image
+        const imgFields = Array.isArray(imgField) ? imgField : [imgField]
+        const hasImage = imgFields.some(f => !!item[f] && !item[f].includes("placeholder"))
+        if (!hasImage) issues.push("لا توجد صورة")
+
+        // Check tags
+        const hasTags = item.tags && Array.isArray(item.tags) && item.tags.length > 0
+        if (!hasTags) issues.push("لا توجد وسوم (tags)")
+
+        // Check content length
+        if (type !== "book" && type !== "media" && wordCount < 100) issues.push("المحتوى قصير (أقل من 100 كلمة)")
+
+        // Calculate score
+        const totalChecks = 5
+        const passedChecks = totalChecks - issues.length
+        const score = Math.round((passedChecks / totalChecks) * 100)
+
+        results.push({
+          id: item.id, title, type, typeName, url: `${urlPrefix}/${item.id}`,
+          issues, score,
+          hasDescription, hasImage, hasTags,
+          titleLength: title.length, descriptionLength: cleanDesc.length,
+        })
+      }
+
+      sermonsRes.data?.forEach(s => analyze(s, "sermon", "خطبة", "/khutba", "description", "thumbnail_path"))
+      lessonsRes.data?.forEach(l => analyze(l, "lesson", "درس", "/dars", "description", "thumbnail_path"))
+      articlesRes.data?.forEach(a => analyze(a, "article", "مقال", "/articles", "excerpt", ["featured_image", "thumbnail"]))
+      booksRes.data?.forEach(b => analyze(b, "book", "كتاب", "/books", "description", "cover_image"))
+      mediaRes.data?.forEach(m => analyze(m, "media", "مرئيات", "/videos", "description", "thumbnail"))
+
+      results.sort((a, b) => a.score - b.score)
+      setAuditResults(results)
+    } catch (err) {
+      setMessage("حدث خطأ أثناء فحص المحتوى")
+    }
+    setAuditLoading(false)
+  }
+
+  // === REDIRECT FUNCTIONS ===
+  async function loadRedirects() {
+    setRedirectsLoading(true)
+    try {
+      const res = await fetch("/api/redirects")
+      const json = await res.json()
+      setRedirects(json.data || [])
+    } catch {
+      setMessage("حدث خطأ في تحميل التحويلات")
+    }
+    setRedirectsLoading(false)
+  }
+
+  async function saveRedirect() {
+    if (!redirectForm.source_path || !redirectForm.destination_path) {
+      setMessage("يرجى ملء المسار المصدر والوجهة")
+      return
+    }
+    try {
+      if (editingRedirectId) {
+        await fetch("/api/redirects", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingRedirectId, ...redirectForm }),
+        })
+        setMessage("تم تحديث التحويلة بنجاح")
+      } else {
+        await fetch("/api/redirects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(redirectForm),
+        })
+        setMessage("تم إضافة التحويلة بنجاح")
+      }
+      resetRedirectForm()
+      loadRedirects()
+    } catch {
+      setMessage("حدث خطأ أثناء الحفظ")
+    }
+  }
+
+  async function deleteRedirect(id: string) {
+    if (!confirm("هل أنت متأكد من حذف هذه التحويلة؟")) return
+    await fetch(`/api/redirects?id=${id}`, { method: "DELETE" })
+    setMessage("تم حذف التحويلة")
+    loadRedirects()
+  }
+
+  async function toggleRedirect(id: string, is_active: boolean) {
+    await fetch("/api/redirects", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: !is_active }),
+    })
+    loadRedirects()
+  }
+
+  function startEditRedirect(r: Redirect) {
+    setRedirectForm({ source_path: r.source_path, destination_path: r.destination_path, redirect_type: r.redirect_type, is_active: r.is_active })
+    setEditingRedirectId(r.id)
+    setIsAddingRedirect(true)
+  }
+
+  function resetRedirectForm() {
+    setRedirectForm({ source_path: "", destination_path: "", redirect_type: 301, is_active: true })
+    setEditingRedirectId(null)
+    setIsAddingRedirect(false)
+  }
+
+  // === INDEXING FUNCTIONS ===
+  async function loadIndexingUrls() {
+    setIndexingLoading(true)
+    setPingResults([])
+    try {
+      const [sermonsRes, lessonsRes, articlesRes, booksRes, mediaRes] = await Promise.all([
+        supabase.from("sermons").select("id, title").eq("publish_status", "published"),
+        supabase.from("lessons").select("id, title").eq("publish_status", "published"),
+        supabase.from("articles").select("id, title").eq("publish_status", "published"),
+        supabase.from("books").select("id, title").eq("publish_status", "published"),
+        supabase.from("media").select("id, title").eq("publish_status", "published"),
+      ])
+
+      const urls: { url: string; type: string }[] = [
+        { url: "/", type: "صفحة رئيسية" },
+        { url: "/about", type: "عن الشيخ" },
+        { url: "/khutba", type: "الخطب" },
+        { url: "/dars", type: "الدروس" },
+        { url: "/articles", type: "المقالات" },
+        { url: "/books", type: "الكتب" },
+        { url: "/videos", type: "المرئيات" },
+      ]
+      sermonsRes.data?.forEach(s => urls.push({ url: `/khutba/${s.id}`, type: `خطبة: ${s.title?.slice(0, 30) || ''}` }))
+      lessonsRes.data?.forEach(l => urls.push({ url: `/dars/${l.id}`, type: `درس: ${l.title?.slice(0, 30) || ''}` }))
+      articlesRes.data?.forEach(a => urls.push({ url: `/articles/${a.id}`, type: `مقال: ${a.title?.slice(0, 30) || ''}` }))
+      booksRes.data?.forEach(b => urls.push({ url: `/books/${b.id}`, type: `كتاب: ${b.title?.slice(0, 30) || ''}` }))
+      mediaRes.data?.forEach(m => urls.push({ url: `/videos/${m.id}`, type: `فيديو: ${m.title?.slice(0, 30) || ''}` }))
+
+      setIndexingUrls(urls)
+    } catch {
+      setMessage("حدث خطأ في تحميل الروابط")
+    }
+    setIndexingLoading(false)
+  }
+
+  async function pingSelectedUrls() {
+    if (selectedUrls.size === 0) {
+      setMessage("يرجى تحديد روابط للإرسال")
+      return
+    }
+    setIndexingLoading(true)
+    setPingResults([])
+    try {
+      const res = await fetch("/api/seo/ping", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: Array.from(selectedUrls) }),
+      })
+      const json = await res.json()
+      setPingResults(json.results || [])
+      setMessage(json.message || "تم الإرسال")
+    } catch {
+      setMessage("حدث خطأ أثناء الإرسال")
+    }
+    setIndexingLoading(false)
+  }
+
+  function toggleUrl(url: string) {
+    setSelectedUrls(prev => {
+      const next = new Set(prev)
+      if (next.has(url)) next.delete(url); else next.add(url)
+      return next
+    })
+  }
+
+  function selectAllUrls() {
+    if (selectedUrls.size === indexingUrls.length) {
+      setSelectedUrls(new Set())
+    } else {
+      setSelectedUrls(new Set(indexingUrls.map(u => u.url)))
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -338,6 +597,30 @@ export default function SEOManagementPage() {
         >
           <Code className="h-4 w-4" />
           إعدادات متقدمة
+        </Button>
+        <Button
+          variant={activeTab === "audit" ? "default" : "outline"}
+          onClick={() => { setActiveTab("audit"); if (auditResults.length === 0) runAudit() }}
+          className="gap-2"
+        >
+          <Activity className="h-4 w-4" />
+          تدقيق المحتوى
+        </Button>
+        <Button
+          variant={activeTab === "redirects" ? "default" : "outline"}
+          onClick={() => { setActiveTab("redirects"); if (redirects.length === 0) loadRedirects() }}
+          className="gap-2"
+        >
+          <ArrowRightLeft className="h-4 w-4" />
+          التحويلات
+        </Button>
+        <Button
+          variant={activeTab === "indexing" ? "default" : "outline"}
+          onClick={() => { setActiveTab("indexing"); if (indexingUrls.length === 0) loadIndexingUrls() }}
+          className="gap-2"
+        >
+          <Radar className="h-4 w-4" />
+          الفهرسة
         </Button>
         <Button
           variant={activeTab === "cache" ? "default" : "outline"}
@@ -1009,6 +1292,329 @@ Sitemap: https://example.com/sitemap.xml`}
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* === AUDIT TAB === */}
+        {activeTab === "audit" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                تدقيق SEO للمحتوى
+              </h2>
+              <Button onClick={runAudit} disabled={auditLoading}>
+                <RefreshCw className={`h-4 w-4 ml-2 ${auditLoading ? "animate-spin" : ""}`} />
+                {auditLoading ? "جاري الفحص..." : "إعادة الفحص"}
+              </Button>
+            </div>
+
+            {auditResults.length > 0 && (
+              <>
+                {/* Overall Score */}
+                {(() => {
+                  const avgScore = Math.round(auditResults.reduce((acc, r) => acc + r.score, 0) / auditResults.length)
+                  const color = avgScore >= 80 ? "text-green-600" : avgScore >= 50 ? "text-yellow-600" : "text-red-600"
+                  const bgColor = avgScore >= 80 ? "bg-green-50 border-green-200" : avgScore >= 50 ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-200"
+                  return (
+                    <div className={`rounded-2xl p-6 border ${bgColor} text-center`}>
+                      <div className={`text-5xl font-bold ${color} mb-2`}>{avgScore}%</div>
+                      <p className="text-sm text-muted-foreground">النتيجة العامة لـ SEO ({auditResults.length} عنصر)</p>
+                      <div className="grid grid-cols-3 gap-4 mt-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">{auditResults.filter(r => r.score >= 80).length}</div>
+                          <div className="text-xs text-muted-foreground">ممتاز</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-yellow-600">{auditResults.filter(r => r.score >= 40 && r.score < 80).length}</div>
+                          <div className="text-xs text-muted-foreground">يحتاج تحسين</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-red-600">{auditResults.filter(r => r.score < 40).length}</div>
+                          <div className="text-xs text-muted-foreground">ضعيف</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                {/* Filter */}
+                <div className="flex gap-2 flex-wrap">
+                  {["all", "sermon", "lesson", "article", "book", "media"].map(f => (
+                    <Button key={f} variant={auditFilter === f ? "default" : "outline"} size="sm" onClick={() => setAuditFilter(f)}>
+                      {f === "all" ? "الكل" : f === "sermon" ? "خطب" : f === "lesson" ? "دروس" : f === "article" ? "مقالات" : f === "book" ? "كتب" : "مرئيات"}
+                      {f !== "all" && ` (${auditResults.filter(r => r.type === f).length})`}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Results */}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {auditResults
+                    .filter(r => auditFilter === "all" || r.type === auditFilter)
+                    .map(item => (
+                      <div key={item.id} className={`p-4 rounded-xl border ${item.score >= 80 ? "bg-green-50/50 border-green-200" :
+                          item.score >= 40 ? "bg-yellow-50/50 border-yellow-200" :
+                            "bg-red-50/50 border-red-200"
+                        }`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${item.score >= 80 ? "bg-green-100 text-green-700" :
+                                  item.score >= 40 ? "bg-yellow-100 text-yellow-700" :
+                                    "bg-red-100 text-red-700"
+                                }`}>
+                                {item.score}%
+                              </span>
+                              <code className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{item.typeName}</code>
+                            </div>
+                            <h4 className="font-medium truncate">{item.title || "بدون عنوان"}</h4>
+                            {item.issues.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {item.issues.map((issue, i) => (
+                                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                                    <XCircle className="h-3 w-3" />
+                                    {issue}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {item.issues.length === 0 && (
+                              <span className="inline-flex items-center gap-1 text-xs text-green-600 mt-2">
+                                <CheckCircle2 className="h-3 w-3" />
+                                لا توجد مشاكل
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span>{item.titleLength} حرف</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </>
+            )}
+
+            {!auditLoading && auditResults.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p>اضغط "إعادة الفحص" لفحص محتوى الموقع</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* === REDIRECTS TAB === */}
+        {activeTab === "redirects" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <ArrowRightLeft className="h-5 w-5 text-primary" />
+                إدارة التحويلات (Redirects)
+              </h2>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={loadRedirects} disabled={redirectsLoading}>
+                  <RefreshCw className={`h-4 w-4 ml-2 ${redirectsLoading ? "animate-spin" : ""}`} />
+                  تحديث
+                </Button>
+                <Button onClick={() => setIsAddingRedirect(true)} disabled={isAddingRedirect || isVisitor}>
+                  <Plus className="h-4 w-4 ml-2" />
+                  إضافة تحويلة
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <h3 className="font-bold text-blue-800 mb-2">ما هي التحويلات؟</h3>
+              <p className="text-sm text-blue-700">
+                تحويل 301 يعيد توجيه الزوار ومحركات البحث تلقائياً من رابط قديم إلى رابط جديد.<br />
+                هذا يمنع فقدان ترتيب الصفحات عند تغيير الروابط.
+              </p>
+            </div>
+
+            {/* Add/Edit Form */}
+            {isAddingRedirect && (
+              <div className="bg-muted/50 rounded-xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold">{editingRedirectId ? "تعديل التحويلة" : "إضافة تحويلة جديدة"}</h3>
+                  <Button variant="ghost" size="icon" onClick={resetRedirectForm}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>المسار القديم (المصدر) *</Label>
+                    <Input
+                      value={redirectForm.source_path}
+                      onChange={(e) => setRedirectForm({ ...redirectForm, source_path: e.target.value })}
+                      placeholder="/old-page"
+                      dir="ltr"
+                      className="bg-background"
+                      disabled={isVisitor}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>المسار الجديد (الوجهة) *</Label>
+                    <Input
+                      value={redirectForm.destination_path}
+                      onChange={(e) => setRedirectForm({ ...redirectForm, destination_path: e.target.value })}
+                      placeholder="/new-page أو https://..."
+                      dir="ltr"
+                      className="bg-background"
+                      disabled={isVisitor}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>نوع التحويل</Label>
+                    <select
+                      value={redirectForm.redirect_type}
+                      onChange={(e) => setRedirectForm({ ...redirectForm, redirect_type: parseInt(e.target.value) })}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                      disabled={isVisitor}
+                    >
+                      <option value={301}>301 - تحويل دائم (يحافظ على SEO)</option>
+                      <option value={302}>302 - تحويل مؤقت</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={resetRedirectForm}>إلغاء</Button>
+                  <Button onClick={saveRedirect} disabled={isVisitor}>
+                    <Save className="h-4 w-4 ml-2" />
+                    {editingRedirectId ? "تحديث" : "إضافة"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Redirects List */}
+            <div className="space-y-3">
+              {redirectsLoading ? (
+                <div className="text-center py-8"><RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
+              ) : redirects.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ArrowRightLeft className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                  <p>لا توجد تحويلات بعد</p>
+                </div>
+              ) : (
+                redirects.map(r => (
+                  <div key={r.id} className={`flex items-center gap-4 p-4 rounded-lg border ${r.is_active ? "bg-muted/30" : "bg-muted/10 opacity-60"}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <code className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded" dir="ltr">{r.source_path}</code>
+                        <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                        <code className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded" dir="ltr">{r.destination_path}</code>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${r.redirect_type === 301 ? "bg-blue-100 text-blue-600" : "bg-yellow-100 text-yellow-600"}`}>{r.redirect_type}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span>الزيارات: {r.hits_count || 0}</span>
+                        <span>{r.is_active ? "مفعّلة" : "معطّلة"}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => toggleRedirect(r.id, r.is_active)} title={r.is_active ? "تعطيل" : "تفعيل"}>
+                        {r.is_active ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-gray-400" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => startEditRedirect(r)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteRedirect(r.id)} disabled={isVisitor}>
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* === INDEXING TAB === */}
+        {activeTab === "indexing" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Radar className="h-5 w-5 text-primary" />
+                مراقب الفهرسة
+              </h2>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={loadIndexingUrls} disabled={indexingLoading}>
+                  <RefreshCw className={`h-4 w-4 ml-2 ${indexingLoading ? "animate-spin" : ""}`} />
+                  تحديث القائمة
+                </Button>
+                <Button onClick={pingSelectedUrls} disabled={indexingLoading || selectedUrls.size === 0 || isVisitor}>
+                  <Radar className="h-4 w-4 ml-2" />
+                  إرسال ({selectedUrls.size}) رابط
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <h3 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                كيف تعمل الفهرسة؟
+              </h3>
+              <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
+                <li>يتم إرسال إشعار لـ Google و Bing بوجود محتوى جديد أو محدث</li>
+                <li>هذا لا يضمن الفهرسة الفورية لكنه يسرّع العملية</li>
+                <li>لا تستخدم هذه الأداة بشكل مفرط (مرة يومياً كافية)</li>
+              </ul>
+            </div>
+
+            {/* Ping Results */}
+            {pingResults.length > 0 && (
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <h3 className="font-bold text-green-800 mb-3">نتائج الإرسال</h3>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {pingResults.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm">
+                      {r.google === "success" ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-red-500" />}
+                      <span className="text-green-700" dir="ltr">{r.url}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* URL Selection */}
+            {indexingLoading ? (
+              <div className="text-center py-8"><RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
+            ) : indexingUrls.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Button variant="outline" size="sm" onClick={selectAllUrls}>
+                    {selectedUrls.size === indexingUrls.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">{indexingUrls.length} رابط متاح</span>
+                </div>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {indexingUrls.map((item, i) => (
+                    <label key={i} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedUrls.has(item.url) ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border hover:bg-muted/40"
+                      }`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedUrls.has(item.url)}
+                        onChange={() => toggleUrl(item.url)}
+                        className="rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <code className="text-xs bg-muted px-2 py-0.5 rounded block truncate" dir="ltr">{item.url}</code>
+                        <span className="text-xs text-muted-foreground">{item.type}</span>
+                      </div>
+                      <a href={`https://elsayed-mourad.online${item.url}`} target="_blank" rel="noreferrer noopener" className="text-muted-foreground hover:text-primary">
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Radar className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p>اضغط "تحديث القائمة" لتحميل الروابط</p>
+              </div>
+            )}
           </div>
         )}
       </div>

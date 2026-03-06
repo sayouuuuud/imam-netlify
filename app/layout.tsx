@@ -10,10 +10,10 @@ import { unstable_cache } from "next/cache"
 import { withTimeout } from "@/lib/utils/with-timeout"
 import { SessionManager } from "@/components/session-manager"
 import { InAppBrowserBlocker } from "@/components/in-app-browser-blocker"
-import { AnalyticsProvider } from "@/components/analytics/analytics-provider"
 import { AnalyticsTracker } from "@/components/analytics-tracker"
 import { JsonLd } from "@/components/json-ld"
 import { generateWebsiteSchema, generatePersonSchema } from "@/lib/schema-generator"
+import { getSiteSettings } from "@/lib/site-settings"
 
 const amiri = Amiri({
   subsets: ["arabic", "latin"],
@@ -29,31 +29,6 @@ const cairo = Cairo({
   display: "swap",
 })
 
-const getSiteSettings = unstable_cache(
-  async () => {
-    try {
-      const supabase = createPublicClient()
-      const { data } = await supabase.from("site_settings").select("*")
-      if (!data) {
-        return {}
-      }
-
-      const settings: Record<string, string> = {}
-      data.forEach((item: any) => {
-        const key = item.key || item.setting_key
-        const value = item.value || item.setting_value
-        if (key && value) {
-          settings[key] = value
-        }
-      })
-      return settings
-    } catch {
-      return {}
-    }
-  },
-  ["site_settings"],
-  { revalidate: 300 }
-)
 
 const getAppearanceSettings = unstable_cache(
   async () => {
@@ -71,18 +46,39 @@ const getAppearanceSettings = unstable_cache(
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
+
+  // Admin SEO keys (meta_title, meta_description, etc.) take priority
+  // over old keys (site_title, site_description, etc.) for backward compatibility
   const siteTitle =
-    settings.site_title || "الشيخ السيد مراد - عالم أزهري"
+    settings.meta_title || settings.site_title || "الشيخ السيد مراد - عالم أزهري"
   const siteDescription =
-    settings.site_description ||
+    settings.meta_description || settings.site_description ||
     "الموقع الرسمي للشيخ السيد مراد - منصة إسلامية شاملة تضم الخطب والدروس العلمية والمقالات والكتب. تعلم العلم الشرعي بفهم وسطي مستنير."
   const siteKeywords =
-    settings.site_keywords ||
+    settings.meta_keywords || settings.site_keywords ||
     "الشيخ السيد مراد,دروس إسلامية,خطب الجمعة,علم شرعي,فقه إسلامي,سيرة نبوية,مقالات دينية,كتب إسلامية"
-  // Use the production domain
-  const baseUrl = new URL("https://elsayed-mourad.online")
 
-  return {
+  // OG fields from admin, fallback to general title/description
+  const ogTitle = settings.og_title || siteTitle
+  const ogDescription = settings.og_description || siteDescription
+  const ogImage = settings.og_image || "/og-default.jpg"
+
+  // Twitter fields from admin
+  const twitterTitle = settings.twitter_title || siteTitle
+  const twitterDescription = settings.twitter_description || siteDescription
+  const twitterImage = settings.twitter_image || ogImage
+
+  // Verification codes from admin (fallback to hardcoded)
+  const googleVerification = settings.google_verification || "t3yRqEKg6tGfcJWSeOMPcIisJSkYbIlsVkUF7zrpzdI"
+  const bingVerification = settings.bing_verification || undefined
+
+  // Canonical URL from admin
+  const canonicalUrl = settings.canonical_url || "https://elsayed-mourad.online"
+
+  // Use the production domain
+  const baseUrl = new URL(canonicalUrl)
+
+  const metadata: Metadata = {
     title: {
       default: siteTitle,
       template: `%s | ${settings.site_name || "الشيخ السيد مراد"}`,
@@ -96,27 +92,29 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "ar_EG",
       siteName: settings.site_name || "الشيخ السيد مراد",
-      title: siteTitle,
-      description: siteDescription,
+      title: ogTitle,
+      description: ogDescription,
       images: [{
-        url: settings.og_image || "/og-default.jpg",
+        url: ogImage,
         width: 1200,
         height: 630,
-        alt: siteTitle,
+        alt: ogTitle,
       }],
     },
     twitter: {
       card: "summary_large_image",
-      title: siteTitle,
-      description: siteDescription,
-      images: [settings.og_image || "/og-default.jpg"],
+      title: twitterTitle,
+      description: twitterDescription,
+      images: [twitterImage],
+      ...(settings.twitter_handle ? { creator: settings.twitter_handle } : {}),
     },
     robots: {
       index: true,
       follow: true,
     },
     verification: {
-      google: "t3yRqEKg6tGfcJWSeOMPcIisJSkYbIlsVkUF7zrpzdI",
+      google: googleVerification,
+      ...(bingVerification ? { other: { "msvalidate.01": bingVerification } } : {}),
     },
     generator: "v0.app",
     appleWebApp: {
@@ -133,6 +131,8 @@ export async function generateMetadata(): Promise<Metadata> {
       "apple-mobile-web-app-status-bar-style": "default",
     },
   }
+
+  return metadata
 }
 
 export const viewport: Viewport = {
@@ -220,8 +220,7 @@ export default async function RootLayout({
             <InAppBrowserBlocker />
             <SessionManager />
             <AnalyticsTracker />
-            <JsonLd schema={[generateWebsiteSchema(), generatePersonSchema()]} />
-            <AnalyticsProvider />
+            <JsonLd schema={[await generateWebsiteSchema(), await generatePersonSchema()]} />
             {children}
           </AuthProvider>
         </ThemeProvider>

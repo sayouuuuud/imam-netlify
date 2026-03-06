@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button"
 import { BookOpen, Search, ChevronRight, ChevronLeft, FileText, Eye } from "lucide-react"
 import { BookCoverImage } from "@/components/book-cover-image"
+import { JsonLd } from "@/components/json-ld"
+import { generateItemListSchema } from "@/lib/schema-generator"
 
 export const metadata: Metadata = {
   title: "الكتب والمؤلفات",
@@ -108,6 +110,17 @@ export default async function BooksPage({
 
   return (
     <>
+      <JsonLd schema={await generateItemListSchema(
+        "الكتب والمؤلفات - الشيخ السيد مراد",
+        "/books",
+        "مجموعة من المؤلفات والكتب العلمية المتاحة للقراءة والتحميل",
+        (books || []).map(b => ({
+          id: b.id,
+          title: b.title,
+          url: `/books/${b.id}`,
+          datePublished: b.created_at,
+        }))
+      )} />
       {/* Hero Section */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

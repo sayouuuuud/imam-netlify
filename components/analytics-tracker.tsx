@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, Suspense } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-export function AnalyticsTracker() {
+function AnalyticsTrackerContent() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        // Don't track admin pages or API routes
+        // Track page view only if it's not admin/api
         if (pathname?.startsWith('/admin') || pathname?.startsWith('/api')) {
             return;
         }
 
-        // Track page view
         const trackPageView = async () => {
             try {
                 // Get visitor ID from localStorage or create new one
@@ -54,9 +54,17 @@ export function AnalyticsTracker() {
         };
 
         trackPageView();
-    }, [pathname]);
+    }, [pathname, searchParams]);
 
     return null;
+}
+
+export function AnalyticsTracker() {
+    return (
+        <Suspense fallback={null}>
+            <AnalyticsTrackerContent />
+        </Suspense>
+    );
 }
 
 function getBrowser(userAgent: string): string {

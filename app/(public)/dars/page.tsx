@@ -14,6 +14,8 @@ import {
   Video,
   ArrowLeft,
 } from "lucide-react"
+import { JsonLd } from "@/components/json-ld"
+import { generateItemListSchema } from "@/lib/schema-generator"
 
 export const metadata: Metadata = {
   title: "الدروس العلمية",
@@ -142,6 +144,21 @@ export default async function DarsPage() {
 
   return (
     <main className="min-h-screen bg-background">
+      <JsonLd schema={await generateItemListSchema(
+        "الدروس العلمية - الشيخ السيد مراد",
+        "/dars",
+        "جداول الدروس العلمية الأسبوعية في الفقه والسيرة النبوية والعقيدة",
+        [
+          ...(fiqhLessons || []),
+          ...(seerahLessons || []),
+          ...(generalLessons || [])
+        ].map(l => ({
+          id: l.id,
+          title: l.title,
+          url: `/dars/${l.id}`,
+          datePublished: l.created_at,
+        }))
+      )} />
       {/* Hero Section */}
       <div className="text-center py-16 relative">
         <span className="text-sm font-semibold text-primary/80 bg-primary/5 px-4 py-1.5 rounded-full inline-block mb-4">

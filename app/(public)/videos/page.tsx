@@ -4,6 +4,8 @@ import Link from "next/link"
 import { Calendar, Eye, Play, Search, Video, ChevronRight, ChevronLeft } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { JsonLd } from "@/components/json-ld"
+import { generateItemListSchema } from "@/lib/schema-generator"
 
 export const metadata: Metadata = {
   title: "المرئيات والمحاضرات - الشيخ السيد مراد",
@@ -89,6 +91,17 @@ export default async function VideosPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd schema={await generateItemListSchema(
+        "المرئيات والمحاضرات - الشيخ السيد مراد",
+        "/videos",
+        "مجموعة من الخطب والدروس واللقاءات التلفزيونية المرئية للشيخ السيد مراد",
+        (videos || []).map(v => ({
+          id: v.id,
+          title: v.title,
+          url: `/videos/${v.id}`,
+          datePublished: v.created_at,
+        }))
+      )} />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16">
         <div className="container mx-auto px-4">

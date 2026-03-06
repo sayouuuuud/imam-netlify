@@ -155,7 +155,7 @@ export default async function BookDetailPage({ params }: PageProps) {
     // Determine Page Count
     let pageCount = book.pages
 
-    const bookSchema = generateBookSchema({
+    const bookSchema = await generateBookSchema({
         title: book.title,
         description: book.description ? stripHtml(book.description) : undefined,
         url: `/books/${book.id}`,
@@ -165,7 +165,7 @@ export default async function BookDetailPage({ params }: PageProps) {
         // isbn: book.isbn // if available
     })
 
-    const breadcrumbSchema = generateBreadcrumbSchema([
+    const breadcrumbSchema = await generateBreadcrumbSchema([
         { name: 'الرئيسية', item: '/' },
         { name: 'الكتب', item: '/books' },
         { name: book.title, item: `/books/${book.id}` },

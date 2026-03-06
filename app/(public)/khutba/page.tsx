@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { createPublicClient } from "@/lib/supabase/public"
+import { JsonLd } from "@/components/json-ld"
+import { generateItemListSchema } from "@/lib/schema-generator"
 import {
   Filter,
   Clock,
@@ -74,6 +76,17 @@ export default async function KhutbaPage({
 
   return (
     <>
+      <JsonLd schema={await generateItemListSchema(
+        "الخطب المنبرية - الشيخ السيد مراد",
+        "/khutba",
+        "مجموعة متكاملة من خطب الجمعة والأعياد والمناسبات الدينية",
+        (sermons || []).map(s => ({
+          id: s.id,
+          title: s.title,
+          url: `/khutba/${s.id}`,
+          datePublished: s.created_at,
+        }))
+      )} />
       {/* Hero Section */}
       <section className="bg-accent-light py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

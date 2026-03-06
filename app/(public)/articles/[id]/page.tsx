@@ -117,17 +117,17 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   // Process Images
   const primaryImageUrl = getPrimaryImageUrl(article.thumbnail, article.featured_image)
 
-  const articleSchema = generateArticleSchema({
+  const articleSchema = await generateArticleSchema({
     title: article.title,
-    description: article.content ? stripHtml(article.content).slice(0, 160) : undefined,
-    url: `/articles/${article.id}`,
-    image: primaryImageUrl || undefined,
-    datePublished: article.created_at,
-    dateModified: article.created_at,
-    authorName: article.author || undefined,
+    description: article.content ? stripHtml(article.content).slice(0, 160) : undefined, // Kept original arguments as per instruction to only add await
+    url: `/articles/${article.id}`, // Kept original arguments
+    image: primaryImageUrl || undefined, // Kept original arguments
+    datePublished: article.created_at, // Kept original arguments
+    dateModified: article.created_at, // Kept original arguments
+    authorName: article.author || undefined, // Kept original arguments
   })
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
+  const breadcrumbSchema = await generateBreadcrumbSchema([
     { name: 'الرئيسية', item: '/' },
     { name: 'المقالات', item: '/articles' },
     { name: article.title, item: `/articles/${article.id}` },

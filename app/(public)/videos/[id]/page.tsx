@@ -133,7 +133,7 @@ export default async function VideoDetailPage({ params }: PageProps) {
   const thumbnailUrl = getThumbnailUrl(video)
   const videoId = video.source === "youtube" ? getYouTubeVideoId(video.url) : null
 
-  const videoSchema = generateVideoSchema({
+  const videoSchema = await generateVideoSchema({
     title: video.title,
     description: video.description ? stripHtml(video.description) : video.title,
     uploadDate: video.created_at,
@@ -143,7 +143,7 @@ export default async function VideoDetailPage({ params }: PageProps) {
     duration: formatDurationToISO(video.duration),
   })
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
+  const breadcrumbSchema = await generateBreadcrumbSchema([
     { name: 'الرئيسية', item: '/' },
     { name: 'المرئيات', item: '/videos' },
     { name: video.title, item: `/videos/${video.id}` },

@@ -65,12 +65,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const totalResults = results.sermons.length + results.lessons.length + results.articles.length + results.books.length
 
-  const breadcrumbSchema = generateBreadcrumbSchema([
+  const breadcrumbSchema = await generateBreadcrumbSchema([
     { name: 'الرئيسية', item: '/' },
     { name: 'البحث', item: '/search' },
   ])
 
-  const searchSchema = query ? generateSearchResultsSchema(query, totalResults) : null
+  const searchSchema = query ? await generateSearchResultsSchema(query) : null
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
