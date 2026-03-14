@@ -1,76 +1,90 @@
-import { MetadataRoute } from 'next'
-import { createPublicClient } from '@/lib/supabase/public'
+import { MetadataRoute } from "next"
+import { createClient } from "@/lib/supabase/server"
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.elsayed-mourad.online'
+// تحديث الخريطة مرة واحدة يومياً لتقليل الضغط على Supabase
+export const revalidate = 86400; 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const supabase = createPublicClient()
+  const supabase = await createClient()
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.elsayed-mourad.online" // تم تعديل الرابط الأساسي
 
-    // 1. Static Pages
-    const routes = [
-        '',
-        '/about',
-        '/contact',
-        '/articles',
-        '/dars',
-        '/khutba',
-        '/books',
-        '/videos',
-    ].map((route) => ({
-        url: `${baseUrl}${route}`,
-        lastModified: new Date().toISOString(),
-        changeFrequency: 'daily' as const,
-        priority: route === '' ? 1 : 0.8,
-    }))
+  // 1. Static Routes
+  const staticRoutes = [
+    "",
+    "/about",
+    "/contact",
+    "/dars",
+    "/khutba",
+    "/books",
+    "/articles",
+    "/videos",
+    "/schedule",
+    "/projects",
+    "/privacy",
+    "/terms",
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: "daily" as const,
+    priority: route === "" ? 1.0 : 0.8,
+  }))
 
-    // 2. Dynamic Content: Articles
-    const { data: articles } = await supabase
-        .from('articles')
-        .select('id, updated_at')
-        .eq('publish_status', 'published')
+  try {
+    // 2. Dynamic Content from Supabase
+    const [
+      { data: sermons },
+      { data: lessons },
+      { data: books },
+      { data: articles },
+    ] = await Promise.all([
+      supabase.from("sermons").select("slug, updated_at").order("updated_at", { ascending: false }),
+      supabase.from("lessons").select("slug, updated_at").order("updated_at", { ascending: false }),
+      supabase.from("books").select("slug, updated_at").order("updated_at", { ascending: false }),
+      supabase.from("articles").select("slug, updated_at").order("updated_at", { ascending: false }),
+    ])
 
-    const articleRoutes = (articles || []).map((article) => ({
-        url: `${baseUrl}/articles/${article.id}`,
-        lastModified: article.updated_at,
-        changeFrequency: 'weekly' as const,
+    const dynamicRoutes: MetadataRoute.Sitemap = []
+
+    // إضافة encodeURI لتشفير الـ Slugs العربية بشكل صحيح
+    sermons?.forEach((item) => {
+      dynamicRoutes.push({
+        url: `${baseUrl}/khutba/${encodeURI(item.slug)}`,
+        lastModified: new Date(item.updated_at),
+        changeFrequency: "weekly",
         priority: 0.7,
-    }))
+      })
+    })
 
-    // 3. Dynamic Content: Lessons
-    const { data: lessons } = await supabase
-        .from('lessons')
-        .select('id, updated_at')
-
-    const lessonRoutes = (lessons || []).map((lesson) => ({
-        url: `${baseUrl}/dars/${lesson.id}`,
-        lastModified: lesson.updated_at,
-        changeFrequency: 'weekly' as const,
+    lessons?.forEach((item) => {
+      dynamicRoutes.push({
+        url: `${baseUrl}/dars/${encodeURI(item.slug)}`,
+        lastModified: new Date(item.updated_at),
+        changeFrequency: "weekly",
         priority: 0.7,
-    }))
+      })
+    })
 
-    // 4. Dynamic Content: Sermons
-    const { data: sermons } = await supabase
-        .from('sermons')
-        .select('id, date') // Sermons often don't have updated_at initially, user date or created_at
+    books?.forEach((item) => {
+      dynamicRoutes.push({
+        url: `${baseUrl}/books/${encodeURI(item.slug)}`,
+        lastModified: new Date(item.updated_at),
+        changeFrequency: "monthly",
+        priority: 0.6,
+      })
+    })
 
-    const sermonRoutes = (sermons || []).map((sermon) => ({
-        url: `${baseUrl}/khutba/${sermon.id}`,
-        lastModified: new Date().toISOString(), // Fallback
-        changeFrequency: 'weekly' as const,
+    articles?.forEach((item) => {
+      dynamicRoutes.push({
+        url: `${baseUrl}/articles/${encodeURI(item.slug)}`,
+        lastModified: new Date(item.updated_at),
+        changeFrequency: "weekly",
         priority: 0.7,
-    }))
+      })
+    })
 
-    // 5. Dynamic Content: Books
-    const { data: books } = await supabase
-        .from('books')
-        .select('id, created_at')
-
-    const bookRoutes = (books || []).map((book) => ({
-        url: `${baseUrl}/books/${book.id}`,
-        lastModified: book.created_at || new Date().toISOString(),
-        changeFrequency: 'monthly' as const,
-        priority: 0.7,
-    }))
-
-    return [...routes, ...articleRoutes, ...lessonRoutes, ...sermonRoutes, ...bookRoutes]
+    return [...staticRoutes, ...dynamicRoutes]
+  } catch (error) {
+    console.error("Sitemap generation error:", error)
+    return staticRoutes
+  }
 }
