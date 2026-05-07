@@ -11,7 +11,6 @@ import { FeaturedBooks } from "@/components/home/featured-books"
 import { LatestSermons } from "@/components/home/latest-sermons"
 import { LatestVideos } from "@/components/home/latest-videos"
 import { NewsletterSection } from "@/components/home/newsletter-section"
-import { StatsSection } from "@/components/home/stats-section"
 import { ScrollAnimation } from "@/components/ui/scroll-animation"
 import { unstable_cache } from "next/cache"
 
@@ -62,12 +61,6 @@ const getHomePageData = unstable_cache(
         .eq("publish_status", "published")
         .order("created_at", { ascending: false })
         .limit(4),
-      // Stats counts
-      supabase.from("lessons").select("id", { count: "exact", head: true }).eq("publish_status", "published"),
-      supabase.from("sermons").select("id", { count: "exact", head: true }).eq("publish_status", "published"),
-      supabase.from("articles").select("id", { count: "exact", head: true }).eq("publish_status", "published"),
-      supabase.from("books").select("id", { count: "exact", head: true }).eq("publish_status", "published"),
-      supabase.from("media").select("id", { count: "exact", head: true }).eq("publish_status", "published"),
     ])
 
     return {
@@ -78,13 +71,6 @@ const getHomePageData = unstable_cache(
       weeklyEvents: queryResults[4].data,
       books: queryResults[5].data,
       videos: queryResults[6].data,
-      stats: {
-        lessons: queryResults[7].count || 0,
-        sermons: queryResults[8].count || 0,
-        articles: queryResults[9].count || 0,
-        books: queryResults[10].count || 0,
-        videos: queryResults[11].count || 0,
-      },
     }
   },
   ["home_page_data"],
@@ -182,7 +168,6 @@ export default async function HomePage() {
     weeklyEvents,
     books,
     videos,
-    stats,
   } = await getHomePageData()
 
 
@@ -285,9 +270,6 @@ export default async function HomePage() {
       <ScrollAnimation>
         <HeroSection data={heroData} />
       </ScrollAnimation>
-
-      {/* Platform Statistics */}
-      <StatsSection stats={stats} />
 
       {/* Latest Content & Schedule Section */}
       <section className="py-12 lg:py-16 bg-surface relative">
