@@ -6,8 +6,14 @@ let redirectsCache: { source_path: string; destination_path: string; redirect_ty
 let cacheTimestamp = 0
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-// Canonical production host. Every other variant (www, uppercased, trailing
-// slash) is 301'd to this so Google indexes exactly one version of each URL.
+// Canonical production host — read from env. This is the host that all
+// legacy traffic (the old .online domain) should be 301'd to.
+//
+// IMPORTANT: We deliberately do NOT enforce a www-vs-non-www redirect here.
+// Vercel handles that at the platform/DNS level. If the deployment is
+// configured so `www.elsayedmourad.com` is the live host and the apex
+// 308's to it (or vice versa), forcing the opposite in proxy.ts creates an
+// infinite redirect loop (`ERR_TOO_MANY_REDIRECTS`).
 const CANONICAL_HOST = (() => {
   try {
     const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
@@ -18,12 +24,9 @@ const CANONICAL_HOST = (() => {
 })()
 
 // Legacy hosts that should permanently 301 to the canonical host.
-// Includes the previous .online domain and any www. variant of the canonical.
-const LEGACY_HOSTS = [
-  "elsayed-mourad.online",
-  "www.elsayed-mourad.online",
-  `www.${CANONICAL_HOST}`,
-]
+// Only the old .online domain — DO NOT add www variants of the live domain
+// here (see comment above).
+const LEGACY_HOST_SUFFIX = "elsayed-mourad.online"
 
 async function getRedirects() {
   const now = Date.now()
@@ -61,14 +64,15 @@ export async function proxy(request: NextRequest) {
   const pathname = url.pathname
   const hostHeader = request.headers.get("host")?.toLowerCase() || ""
 
-  // 1) Canonical host enforcement — only on real production requests.
-  //    Skip preview/localhost hosts to avoid breaking dev / Vercel previews.
-  const isProdHost =
-    LEGACY_HOSTS.includes(hostHeader) ||
-    hostHeader.endsWith(".elsayed-mourad.online") ||
-    hostHeader === CANONICAL_HOST
+  // 1) Legacy domain redirect ONLY. Anyone arriving on the old
+  //    `elsayed-mourad.online` (or any subdomain of it) is permanently
+  //    redirected to the new canonical host. We do not touch any other
+  //    host — Vercel's domain config decides www vs apex.
+  const isLegacyHost =
+    hostHeader === LEGACY_HOST_SUFFIX ||
+    hostHeader.endsWith(`.${LEGACY_HOST_SUFFIX}`)
 
-  if (isProdHost && hostHeader !== CANONICAL_HOST) {
+  if (isLegacyHost) {
     const canonicalUrl = new URL(request.url)
     canonicalUrl.host = CANONICAL_HOST
     canonicalUrl.protocol = "https:"
