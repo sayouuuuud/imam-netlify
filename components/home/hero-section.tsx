@@ -205,10 +205,6 @@ export async function HeroSection({ data }: HeroSectionProps) {
                       sizes="(max-width: 640px) 280px, 320px"
                       priority
                       crossOrigin="anonymous"
-                      onError={(e) => {
-                        console.error("[v0] Image failed to load:", bookImageUrl);
-                        e.currentTarget.style.display = "none";
-                      }}
                     />
                   </div>
                 ) : (
