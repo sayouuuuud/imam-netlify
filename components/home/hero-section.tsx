@@ -145,56 +145,92 @@ export async function HeroSection({ data }: HeroSectionProps) {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col lg:flex-row-reverse items-center justify-between gap-8 lg:gap-12">
-            {/* Hadith Content - Right Side on Desktop */}
-            <div className="flex-1 text-right space-y-6 lg:space-y-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+            {/* Content */}
+            <div className="flex-1 text-center lg:text-right space-y-8 lg:space-y-10">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-card px-4 py-2 rounded-full border border-border shadow-sm transition-all duration-300 group-hover:shadow-md">
+                <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                <span className="text-sm text-secondary font-medium">حديث اليوم</span>
+              </div>
+
               <h1
-                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-tight font-serif font-bold text-foreground"
+                className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-relaxed font-medium text-foreground font-serif w-full max-w-4xl mx-auto lg:mx-0 break-words"
                 dangerouslySetInnerHTML={{
                   __html: parseUnderlinedText(hadithText, heroData.underline_text),
                 }}
               />
 
+              {/* Description - from database */}
+              <p className="text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto lg:mx-0">
+                {heroData.hadith_explanation}
+              </p>
+
               {/* Source - from database */}
-              <p className="text-sm sm:text-base text-secondary font-medium">
+              <p className="text-sm text-secondary font-medium flex items-center justify-center lg:justify-start gap-2">
+                <svg className="w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z"/></svg>
                 {heroData.hadith_translation}
               </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <Link
+                  href={heroData.hadith_button_link}
+                  className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-primary-foreground px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-medium group"
+                >
+                  <BookOpen className="text-xl w-5 h-5 group-hover:scale-110 transition-transform" />
+                  {heroData.hadith_button_text}
+                </Link>
+                <Link
+                  href="/dars"
+                  className="flex items-center gap-2 bg-card border border-border text-card-foreground px-8 py-3.5 rounded-xl hover:bg-accent transition-all duration-300 shadow-sm hover:shadow-md text-lg font-medium group"
+                >
+                  <PlayCircle className="text-xl w-5 h-5 group-hover:scale-110 transition-transform" />
+                  استمع للدرس
+                </Link>
+              </div>
             </div>
 
-            {/* Featured Book - Left Side on Desktop */}
-            <div className="flex-shrink-0 relative group w-full lg:w-auto flex justify-center lg:justify-start">
-              <div className="relative">
+            {/* Featured Book - Now properly shows book image from database */}
+            <div className="flex-shrink-0 relative group">
+              <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full transform scale-90 group-hover:scale-100 transition duration-700"></div>
+              <div className="relative bg-card p-4 rounded-2xl shadow-xl border border-border">
                 {bookImageUrl ? (
-                  <div className="relative w-[260px] sm:w-[280px] h-[380px] sm:h-[400px] rounded-2xl overflow-hidden bg-muted shadow-lg">
+                  <div className="relative w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl overflow-hidden bg-muted">
                     <Image
                       src={bookImageUrl}
                       alt={featuredBook?.title || ""}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 260px, 280px"
+                      sizes="(max-width: 640px) 280px, 320px"
                       priority
                       crossOrigin="anonymous"
                     />
                   </div>
                 ) : (
-                  <div className="relative bg-gradient-to-br from-primary to-primary-hover w-[260px] sm:w-[280px] h-[380px] sm:h-[400px] rounded-2xl shadow-lg flex flex-col items-center justify-center text-center p-6">
+                  <div className="relative bg-gradient-to-br from-primary to-primary-hover w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl shadow-inner flex flex-col items-center justify-center text-center p-8 border-[8px] border-primary-hover/50">
+                    <div className="absolute inset-4 border border-secondary/30 rounded-lg pointer-events-none"></div>
+                    <div className="absolute inset-6 border border-secondary/20 rounded pointer-events-none"></div>
+
                     <span className="text-secondary text-xs font-medium tracking-widest mb-4 uppercase">
                       {heroData.book_custom_text}
                     </span>
-                    <h2 className="text-primary-foreground text-4xl font-serif font-bold mb-1">فقه</h2>
-                    <h2 className="text-primary-foreground text-4xl font-serif font-bold mb-4">السنة</h2>
-                    <div className="w-12 h-0.5 bg-secondary mb-4"></div>
-                    <p className="text-muted text-xs">دراسة منهجية</p>
+                    <h2 className="text-primary-foreground text-4xl sm:text-5xl font-serif font-bold mb-1">فقه</h2>
+                    <h2 className="text-primary-foreground text-4xl sm:text-5xl font-serif font-bold mb-6">السنة</h2>
+                    <div className="w-16 h-0.5 bg-secondary mb-6"></div>
+                    <p className="text-muted text-sm">دراسة منهجية</p>
+
+                    <div className="absolute left-0 top-4 bottom-4 w-4 bg-gradient-to-r from-black/20 to-transparent rounded-l-lg"></div>
                   </div>
                 )}
 
                 {/* View Book Link */}
                 <Link
                   href={featuredBook ? `/books/${featuredBook.id}` : heroData.button_link}
-                  className="mt-4 flex items-center justify-center gap-2 text-primary dark:text-secondary font-medium cursor-pointer hover:underline py-2 group/link text-sm"
+                  className="mt-4 flex items-center justify-center gap-2 text-primary dark:text-secondary font-medium cursor-pointer hover:underline py-2 group/link"
                 >
-                  <Eye className="w-4 h-4 group-hover/link:scale-110 transition-transform" />
-                  <span>{heroData.book_button_text}</span>
+                  <Eye className="text-sm w-4 h-4 group-hover/link:scale-110 transition-transform" />
+                  <span className="text-sm">{heroData.book_button_text}</span>
                 </Link>
               </div>
             </div>
