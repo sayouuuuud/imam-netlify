@@ -45,8 +45,6 @@ function parseUnderlinedText(text: string, underlineText: string | null): string
 
 export async function HeroSection({ data }: HeroSectionProps) {
   const supabase = createPublicClient()
-  
-  console.log("[v0] HeroSection received data:", data)
 
   let featuredBook: FeaturedBook | null = null
   let bookImageUrl: string | null = null
