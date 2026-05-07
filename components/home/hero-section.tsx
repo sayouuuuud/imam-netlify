@@ -1,7 +1,7 @@
 import Link from "next/link"
-import Image from "next/image"
 import { createPublicClient } from "@/lib/supabase/public"
 import { BookOpen, PlayCircle, Eye } from "lucide-react"
+import { HeroBookImage } from "./hero-book-image"
 
 interface HeroData {
   hadith_text: string | null
@@ -206,33 +206,11 @@ export async function HeroSection({ data }: HeroSectionProps) {
               <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full transform scale-90 group-hover:scale-100 transition duration-700"></div>
               <div className="relative bg-card p-4 rounded-2xl shadow-xl border border-border">
                 {bookImageUrl ? (
-                  <div className="relative w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={bookImageUrl}
-                      alt={featuredBook?.title || "غلاف الكتاب"}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        target.style.display = 'none';
-                        const fallback = target.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = 'flex';
-                      }}
-                    />
-                    {/* Fallback when image fails */}
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover flex flex-col items-center justify-center text-center p-8 border-[8px] border-primary-hover/50"
-                      style={{ display: 'none' }}
-                    >
-                      <div className="absolute inset-4 border border-secondary/30 rounded-lg pointer-events-none"></div>
-                      <span className="text-secondary text-xs font-medium tracking-widest mb-4 uppercase">
-                        {heroData.book_custom_text}
-                      </span>
-                      <h2 className="text-primary-foreground text-3xl font-serif font-bold mb-2 line-clamp-3">{featuredBook?.title || "الكتاب"}</h2>
-                      <div className="w-16 h-0.5 bg-secondary mt-4"></div>
-                    </div>
-                  </div>
+                  <HeroBookImage
+                    imageUrl={bookImageUrl}
+                    title={featuredBook?.title || ""}
+                    customText={heroData.book_custom_text}
+                  />
                 ) : (
                   <div className="relative bg-gradient-to-br from-primary to-primary-hover w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl shadow-inner flex flex-col items-center justify-center text-center p-8 border-[8px] border-primary-hover/50">
                     <div className="absolute inset-4 border border-secondary/30 rounded-lg pointer-events-none"></div>
