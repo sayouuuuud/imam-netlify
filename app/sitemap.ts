@@ -6,11 +6,11 @@ import { createPublicClient } from "@/lib/supabase/public"
 export const revalidate = 3600
 
 // Use one canonical host everywhere. Without this, we end up mixing
-// `www.elsayed-mourad.online` and `elsayed-mourad.online` between the
+// `www.elsayedmourad.com` and `elsayedmourad.com` between the
 // sitemap, robots.txt, and JSON-LD, which Google treats as duplicate hosts.
 const CANONICAL_BASE_URL =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://elsayed-mourad.online"
+    "https://elsayedmourad.com"
 
 function buildUrl(path: string): string {
     if (!path) return CANONICAL_BASE_URL

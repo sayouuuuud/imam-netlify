@@ -34,7 +34,7 @@ export async function POST() {
 export async function GET() {
     const baseUrl =
         process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-        "https://elsayed-mourad.online"
+        "https://elsayedmourad.com"
     return NextResponse.json({
         sitemap: `${baseUrl}/sitemap.xml`,
         robots: `${baseUrl}/robots.txt`,

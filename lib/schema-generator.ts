@@ -2,7 +2,7 @@ import { getSiteSettings } from "./site-settings"
 
 export type SchemaType = Record<string, unknown>
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
 
 // Helper function to get common author data from settings
 async function getAuthorData() {
@@ -71,6 +71,11 @@ export async function generatePersonSchema(): Promise<SchemaType> {
 
 // ─────────────────────────────────────────────────────────────
 // WEBSITE SCHEMA
+//
+// Google uses the `name` field here as the "site name" shown in search
+// results (Sitelinks Search Box / brand row). It must be concise and
+// recognizable — long names like "الموقع الرسمي - الشيخ السيد مراد سلامة"
+// get rejected and Google falls back to the bare domain instead.
 // ─────────────────────────────────────────────────────────────
 export async function generateWebsiteSchema(): Promise<SchemaType> {
     const author = await getAuthorData()
@@ -78,7 +83,17 @@ export async function generateWebsiteSchema(): Promise<SchemaType> {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
-        name: `الموقع الرسمي - ${author.name}`,
+        // Short, branded site name — what Google should display under the URL.
+        name: "السيد مراد سلامة",
+        // Other names users / search engines may know the site by.
+        alternateName: [
+            "الشيخ السيد مراد سلامة",
+            "الشيخ السيد مراد",
+            "السيد مراد",
+            "الموقع الرسمي للشيخ السيد مراد سلامة",
+            "elsayedmourad",
+            "Sayed Mourad",
+        ],
         url: SITE_URL,
         description: author.description,
         inLanguage: "ar",

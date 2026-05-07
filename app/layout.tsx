@@ -81,29 +81,36 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Canonical URL from admin — normalized (no trailing slash) and guarded
   // against broken values so we don't blow up `new URL()`.
-  const rawCanonical = settings.canonical_url || "https://elsayed-mourad.online"
+  const rawCanonical = settings.canonical_url || "https://elsayedmourad.com"
   const canonicalUrl = (() => {
     try {
       const u = new URL(rawCanonical)
       return `${u.protocol}//${u.host}`
     } catch {
-      return "https://elsayed-mourad.online"
+      return "https://elsayedmourad.com"
     }
   })()
 
   // Use the production domain
   const baseUrl = new URL(canonicalUrl)
 
+  // Branded short site name — used by Google for the "site name" row in
+  // search results, by browsers as the install/app title, and by social
+  // platforms when sharing. Keep it short and recognizable.
+  const brandedSiteName = settings.site_name || "السيد مراد سلامة"
+
   const metadata: Metadata = {
     title: {
       default: siteTitle,
-      template: `%s | ${settings.site_name || "الشيخ السيد مراد"}`,
+      template: `%s | ${brandedSiteName}`,
     },
     metadataBase: baseUrl,
     description: siteDescription,
+    applicationName: brandedSiteName,
     keywords: siteKeywords.split(",").map((k: string) => k.trim()),
-    authors: [{ name: settings.site_author || "الشيخ السيد مراد" }],
-    creator: settings.site_author || "الشيخ السيد مراد",
+    authors: [{ name: settings.site_author || "الشيخ السيد مراد سلامة" }],
+    creator: settings.site_author || "الشيخ السيد مراد سلامة",
+    publisher: brandedSiteName,
     // Advertise the site-wide canonical so Google knows which host is primary
     // (prevents www / non-www or http / https duplicate indexing).
     alternates: {
@@ -112,7 +119,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "ar_EG",
-      siteName: settings.site_name || "الشيخ السيد مراد",
+      siteName: brandedSiteName,
       title: ogTitle,
       description: ogDescription,
       images: [{
@@ -143,7 +150,7 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
-      title: settings.site_name || "الشيخ السيد مراد",
+      title: brandedSiteName,
     },
     formatDetection: {
       telephone: false,

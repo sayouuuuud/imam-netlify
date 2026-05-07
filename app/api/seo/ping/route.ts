@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         }
 
         const baseUrl = normalizeBaseUrl(
-            process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+            process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
         )
         const host = getHost(baseUrl)
         const key = await getOrCreateIndexNowKey()
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
 export async function GET() {
     // Helpful diagnostic endpoint — returns config + key location
     const baseUrl = normalizeBaseUrl(
-        process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+        process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
     )
     const key = await getOrCreateIndexNowKey()
     return NextResponse.json({

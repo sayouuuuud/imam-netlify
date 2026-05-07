@@ -85,13 +85,13 @@ export async function buildPageMetadata(
   // Resolve canonical base URL (same algorithm as root layout, kept local to
   // avoid a circular import).
   const rawCanonical =
-    pageRow?.canonical_url || site.canonical_url || "https://elsayed-mourad.online"
+    pageRow?.canonical_url || site.canonical_url || "https://elsayedmourad.com"
   let canonicalBase: string
   try {
     const u = new URL(rawCanonical)
     canonicalBase = `${u.protocol}//${u.host}`
   } catch {
-    canonicalBase = "https://elsayed-mourad.online"
+    canonicalBase = "https://elsayedmourad.com"
   }
 
   const canonicalUrl = normalized === "/" ? canonicalBase : `${canonicalBase}${normalized}`

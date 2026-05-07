@@ -182,7 +182,7 @@ export default async function KhutbaDetailPage({ params }: PageProps) {
         description: sermon.description ? stripHtml(sermon.description) : undefined,
         url: `/khutba/${sermon.slug || sermon.id}`,
         uploadDate: sermon.created_at,
-        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://elsayed-mourad.online${audioUrl}`,
+        contentUrl: audioUrl.startsWith('http') ? audioUrl : `https://elsayedmourad.com${audioUrl}`,
         duration: formatDurationToISO(sermon.duration),
     }) : null
 

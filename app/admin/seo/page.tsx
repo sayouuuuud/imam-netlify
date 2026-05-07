@@ -1768,7 +1768,7 @@ Sitemap: https://example.com/sitemap.xml`}
                         <span className="text-xs text-muted-foreground">{item.type}</span>
                       </div>
                       <a
-                        href={`${(settings.canonical_url || "https://elsayed-mourad.online").replace(/\/$/, "")}${item.url}`}
+                        href={`${(settings.canonical_url || "https://elsayedmourad.com").replace(/\/$/, "")}${item.url}`}
                         target="_blank"
                         rel="noreferrer noopener"
                         className="text-muted-foreground hover:text-primary"
