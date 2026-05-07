@@ -155,7 +155,7 @@ export async function HeroSection({ data }: HeroSectionProps) {
               </div>
 
               <h1
-                className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-relaxed font-medium text-foreground font-serif w-full"
+                className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-relaxed font-medium text-foreground font-serif w-full max-w-4xl mx-auto lg:mx-0 break-words"
                 dangerouslySetInnerHTML={{
                   __html: parseUnderlinedText(hadithText, heroData.underline_text),
                 }}
@@ -196,7 +196,7 @@ export async function HeroSection({ data }: HeroSectionProps) {
               <div className="absolute inset-0 bg-primary opacity-20 blur-3xl rounded-full transform scale-90 group-hover:scale-100 transition duration-700"></div>
               <div className="relative bg-card p-4 rounded-2xl shadow-xl border border-border">
                 {bookImageUrl ? (
-                  <div className="relative w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl overflow-hidden">
+                  <div className="relative w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl overflow-hidden bg-muted">
                     <Image
                       src={bookImageUrl}
                       alt={featuredBook?.title || ""}
@@ -204,6 +204,11 @@ export async function HeroSection({ data }: HeroSectionProps) {
                       className="object-cover"
                       sizes="(max-width: 640px) 280px, 320px"
                       priority
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.error("[v0] Image failed to load:", bookImageUrl);
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                   </div>
                 ) : (
