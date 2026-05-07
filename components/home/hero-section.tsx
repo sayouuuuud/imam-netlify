@@ -61,9 +61,13 @@ export async function HeroSection({ data }: HeroSectionProps) {
         featuredBook = bookData
         if (bookData.cover_image_path) {
           if (bookData.cover_image_path.startsWith("uploads/")) {
-            bookImageUrl = `/api/download?key=${encodeURIComponent(bookData.cover_image_path)}`
-          } else {
+            // Use direct B2 URL for images to avoid redirect issues
+            bookImageUrl = `https://f005.backblazeb2.com/file/sheikh-sayed-public/${bookData.cover_image_path}`
+          } else if (bookData.cover_image_path.startsWith("http")) {
             bookImageUrl = bookData.cover_image_path
+          } else {
+            // Fallback for other paths
+            bookImageUrl = `https://f005.backblazeb2.com/file/sheikh-sayed-public/${bookData.cover_image_path}`
           }
         }
       }
@@ -155,7 +159,13 @@ export async function HeroSection({ data }: HeroSectionProps) {
               </div>
 
               <h1
-                className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-relaxed font-medium text-foreground font-serif w-full"
+                className={`leading-relaxed font-medium text-foreground font-serif w-full ${
+                  hadithText.length > 200 
+                    ? "text-xl sm:text-2xl lg:text-3xl" 
+                    : hadithText.length > 100 
+                      ? "text-2xl sm:text-3xl lg:text-4xl" 
+                      : "text-3xl sm:text-4xl lg:text-5xl xl:text-6xl"
+                }`}
                 dangerouslySetInnerHTML={{
                   __html: parseUnderlinedText(hadithText, heroData.underline_text),
                 }}
@@ -197,14 +207,31 @@ export async function HeroSection({ data }: HeroSectionProps) {
               <div className="relative bg-card p-4 rounded-2xl shadow-xl border border-border">
                 {bookImageUrl ? (
                   <div className="relative w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl overflow-hidden">
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={bookImageUrl}
-                      alt={featuredBook?.title || ""}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 280px, 320px"
-                      priority
+                      alt={featuredBook?.title || "غلاف الكتاب"}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
                     />
+                    {/* Fallback when image fails */}
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-br from-primary to-primary-hover flex flex-col items-center justify-center text-center p-8 border-[8px] border-primary-hover/50"
+                      style={{ display: 'none' }}
+                    >
+                      <div className="absolute inset-4 border border-secondary/30 rounded-lg pointer-events-none"></div>
+                      <span className="text-secondary text-xs font-medium tracking-widest mb-4 uppercase">
+                        {heroData.book_custom_text}
+                      </span>
+                      <h2 className="text-primary-foreground text-3xl font-serif font-bold mb-2 line-clamp-3">{featuredBook?.title || "الكتاب"}</h2>
+                      <div className="w-16 h-0.5 bg-secondary mt-4"></div>
+                    </div>
                   </div>
                 ) : (
                   <div className="relative bg-gradient-to-br from-primary to-primary-hover w-[280px] sm:w-[320px] h-[400px] sm:h-[460px] rounded-xl shadow-inner flex flex-col items-center justify-center text-center p-8 border-[8px] border-primary-hover/50">
