@@ -2,7 +2,7 @@ import { getSiteSettings } from "./site-settings"
 
 export type SchemaType = Record<string, unknown>
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
 
 // Helper function to get common author data from settings
 async function getAuthorData() {

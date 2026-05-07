@@ -4,7 +4,7 @@
 
 
 const DEFAULT_OG_IMAGE = "/og-default.jpg"
-const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
 
 /**
  * الحصول على صورة المعاينة المناسبة للكتاب

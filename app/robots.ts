@@ -4,7 +4,7 @@ import { getSiteSettings } from "@/lib/site-settings"
 // Keep the same canonical host used by the sitemap & JSON-LD.
 const CANONICAL_BASE_URL =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://elsayed-mourad.online"
+    "https://elsayedmourad.com"
 
 export const revalidate = 3600
 

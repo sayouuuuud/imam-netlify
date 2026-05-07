@@ -10,12 +10,20 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 // slash) is 301'd to this so Google indexes exactly one version of each URL.
 const CANONICAL_HOST = (() => {
   try {
-    const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+    const raw = process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
     return new URL(raw).host.toLowerCase()
   } catch {
-    return "elsayed-mourad.online"
+    return "elsayedmourad.com"
   }
 })()
+
+// Legacy hosts that should permanently 301 to the canonical host.
+// Includes the previous .online domain and any www. variant of the canonical.
+const LEGACY_HOSTS = [
+  "elsayed-mourad.online",
+  "www.elsayed-mourad.online",
+  `www.${CANONICAL_HOST}`,
+]
 
 async function getRedirects() {
   const now = Date.now()
@@ -56,9 +64,8 @@ export async function proxy(request: NextRequest) {
   // 1) Canonical host enforcement — only on real production requests.
   //    Skip preview/localhost hosts to avoid breaking dev / Vercel previews.
   const isProdHost =
+    LEGACY_HOSTS.includes(hostHeader) ||
     hostHeader.endsWith(".elsayed-mourad.online") ||
-    hostHeader === "elsayed-mourad.online" ||
-    hostHeader === `www.${CANONICAL_HOST}` ||
     hostHeader === CANONICAL_HOST
 
   if (isProdHost && hostHeader !== CANONICAL_HOST) {

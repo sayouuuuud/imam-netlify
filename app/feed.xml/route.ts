@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public"
 export const revalidate = 3600
 
 const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://elsayed-mourad.online"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://elsayedmourad.com"
 ).replace(/\/$/, "")
 
 function escapeXml(str: string): string {

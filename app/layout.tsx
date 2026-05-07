@@ -81,13 +81,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Canonical URL from admin — normalized (no trailing slash) and guarded
   // against broken values so we don't blow up `new URL()`.
-  const rawCanonical = settings.canonical_url || "https://elsayed-mourad.online"
+  const rawCanonical = settings.canonical_url || "https://elsayedmourad.com"
   const canonicalUrl = (() => {
     try {
       const u = new URL(rawCanonical)
       return `${u.protocol}//${u.host}`
     } catch {
-      return "https://elsayed-mourad.online"
+      return "https://elsayedmourad.com"
     }
   })()
 
